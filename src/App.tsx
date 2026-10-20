@@ -375,6 +375,23 @@ export default function App() {
     const a = document.createElement('a'); a.href = url; a.download = 'medcomm_results.csv'; a.click(); URL.revokeObjectURL(url);
   };
 
+  const downloadGame = () => {
+    // Собираем полный HTML документа, включая все инлайновые стили и скрипты
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Govoryashchiy_Vrach_DPO_Kvest.html';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 200);
+    showNotif('Игра скачана! Откройте файл двойным кликом.');
+  };
+
   const exportTxt = () => {
     const games = getAllSavedGames();
     let txt = 'ОТЧЁТ ПО ТОКУ ДПО — Медицинская коммуникация\n=========================================\n\n';
@@ -680,6 +697,7 @@ export default function App() {
                 {gameState && !gameState.completed && <button className="btn btn-secondary btn-full" onClick={() => setScreen('game')}>▶ Продолжить</button>}
                 <button className="btn btn-secondary btn-full" onClick={() => setScreen('glossary')}>📖 Глоссарий техник</button>
                 <button className="btn btn-amber btn-full" onClick={() => setScreen('role')}>👨‍🏫 Режим преподавателя</button>
+                <button className="btn btn-gold btn-full" onClick={downloadGame}>⬇️ Скачать игру (HTML)</button>
               </div>
             </div>
           </div>
