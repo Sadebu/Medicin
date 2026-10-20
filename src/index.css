@@ -614,6 +614,12 @@ h1, h2, h3, h4 {
 .svg-container svg {
   width: 100%;
   height: auto;
+  pointer-events: none;
+}
+
+/* Декоративные SVG не должны перехватывать клики */
+svg[style*="display: block"] {
+  pointer-events: none;
 }
 
 .chip {

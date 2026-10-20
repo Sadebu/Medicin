@@ -74,7 +74,7 @@ function createInitialState(profile: PlayerProfile): GameState {
 // ===== SVG COMPONENTS =====
 function SVGMap() {
   return (
-    <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 400, margin: '0 auto 24px', display: 'block' }}>
+    <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 400, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
       <defs><linearGradient id="pathGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#2ec4b6" /><stop offset="100%" stopColor="#e9c46a" /></linearGradient></defs>
       <path d="M 40 100 Q 100 40 160 100 Q 220 160 280 100 Q 340 40 380 100" fill="none" stroke="url(#pathGrad)" strokeWidth="3" strokeDasharray="8,4" />
       {[40, 120, 200, 280, 360].map((x, i) => (
@@ -91,7 +91,7 @@ function SVGMap() {
 function SVGStation({ idx }: { idx: number }) {
   const svgs = [
     // Station 1
-    <svg key="s1" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block' }}>
+    <svg key="s1" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
       <rect x="20" y="30" width="260" height="140" rx="10" fill="rgba(46,196,182,0.08)" stroke="#2ec4b6" strokeWidth="1.5" />
       <circle cx="100" cy="100" r="25" fill="rgba(231,111,81,0.2)" stroke="#e76f51" strokeWidth="1.5" /><text x="100" y="105" textAnchor="middle" fill="#e76f51" fontSize="14">✕</text>
       <path d="M 140 100 L 180 100" stroke="#e9c46a" strokeWidth="2" strokeDasharray="4,3" />
@@ -101,7 +101,7 @@ function SVGStation({ idx }: { idx: number }) {
       <text x="150" y="25" textAnchor="middle" fill="#e9c46a" fontSize="12" fontFamily="Georgia">Модели коммуникации</text>
     </svg>,
     // Station 2
-    <svg key="s2" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block' }}>
+    <svg key="s2" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
       <ellipse cx="150" cy="90" rx="40" ry="50" fill="rgba(58,134,255,0.1)" stroke="#3a86ff" strokeWidth="1.5" />
       <ellipse cx="150" cy="90" rx="55" ry="65" fill="none" stroke="rgba(58,134,255,0.3)" strokeWidth="1" strokeDasharray="4,3" />
       <ellipse cx="150" cy="90" rx="70" ry="80" fill="none" stroke="rgba(58,134,255,0.15)" strokeWidth="1" strokeDasharray="4,3" />
@@ -111,7 +111,7 @@ function SVGStation({ idx }: { idx: number }) {
       <text x="150" y="185" textAnchor="middle" fill="#e9c46a" fontSize="11" fontFamily="Georgia">6 типов профиля</text>
     </svg>,
     // Station 3
-    <svg key="s3" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block' }}>
+    <svg key="s3" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
       <rect x="80" y="60" width="60" height="80" rx="5" fill="rgba(244,162,97,0.1)" stroke="#f4a261" strokeWidth="1.5" />
       <rect x="160" y="60" width="60" height="80" rx="5" fill="rgba(244,162,97,0.1)" stroke="#f4a261" strokeWidth="1.5" />
       <circle cx="110" cy="80" r="10" fill="rgba(244,162,97,0.3)" /><circle cx="190" cy="80" r="10" fill="rgba(244,162,97,0.3)" />
@@ -122,7 +122,7 @@ function SVGStation({ idx }: { idx: number }) {
       <text x="150" y="185" textAnchor="middle" fill="#e9c46a" fontSize="11" fontFamily="Georgia">Кабинет приёма</text>
     </svg>,
     // Station 4
-    <svg key="s4" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block' }}>
+    <svg key="s4" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
       <circle cx="100" cy="100" r="30" fill="rgba(46,196,182,0.1)" stroke="#2ec4b6" strokeWidth="1.5" />
       <circle cx="100" cy="85" r="12" fill="rgba(46,196,182,0.2)" />
       <path d="M 140 80 Q 160 70 180 80 Q 200 90 220 80 Q 240 70 260 80" fill="none" stroke="#f4a261" strokeWidth="2"><animate attributeName="d" dur="2s" repeatCount="indefinite" values="M 140 80 Q 160 70 180 80 Q 200 90 220 80 Q 240 70 260 80;M 140 80 Q 160 90 180 80 Q 200 70 220 80 Q 240 90 260 80;M 140 80 Q 160 70 180 80 Q 200 90 220 80 Q 240 70 260 80" /></path>
@@ -131,7 +131,7 @@ function SVGStation({ idx }: { idx: number }) {
       <text x="150" y="185" textAnchor="middle" fill="#e9c46a" fontSize="11" fontFamily="Georgia">Голос как инструмент</text>
     </svg>,
     // Station 5
-    <svg key="s5" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block' }}>
+    <svg key="s5" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
       <path d="M 30 120 L 120 120" stroke="#e76f51" strokeWidth="2" /><path d="M 180 120 L 270 120" stroke="#e76f51" strokeWidth="2" />
       <path d="M 120 120 Q 150 80 180 120" fill="none" stroke="#2ec4b6" strokeWidth="3" />
       <line x1="130" y1="120" x2="130" y2="140" stroke="#e76f51" strokeWidth="1" strokeDasharray="3,2" /><line x1="170" y1="120" x2="170" y2="140" stroke="#e76f51" strokeWidth="1" strokeDasharray="3,2" />
@@ -151,7 +151,7 @@ function SVGRadar({ scales }: { scales: Record<string, number> }) {
   const points = keys.map((k, i) => getPoint(i, scales[k] || 0));
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
   return (
-    <svg viewBox="0 0 300 260" style={{ width: '100%', maxWidth: 300, margin: '0 auto', display: 'block' }}>
+    <svg viewBox="0 0 300 260" style={{ width: '100%', maxWidth: 300, margin: '0 auto', display: 'block', pointerEvents: 'none' }}>
       {[0.25, 0.5, 0.75, 1].map(f => (<polygon key={f} points={keys.map((_, i) => { const p = getPoint(i, f * 100); return `${p.x},${p.y}`; }).join(' ')} fill="none" stroke="rgba(238,246,244,0.1)" strokeWidth="1" />))}
       {keys.map((_, i) => { const p = getPoint(i, 100); return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(238,246,244,0.1)" strokeWidth="1" />; })}
       <path d={pathD} fill="rgba(46,196,182,0.2)" stroke="#2ec4b6" strokeWidth="2" />
@@ -195,9 +195,28 @@ export default function App() {
   
   const [hudExpanded, setHudExpanded] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [animatedIndex, setAnimatedIndex] = useState(0);
 
   useEffect(() => { if (gameState) saveGame(gameState); }, [gameState]);
   useEffect(() => { setSavedGames(getAllSavedGames()); }, [screen, gameState]);
+
+  // Анимация countUp для индекса на финальном экране
+  useEffect(() => {
+    if (screen === 'final' && gameState) {
+      const target = calcCommIndex(gameState.scales);
+      let current = 0;
+      const step = Math.max(1, Math.ceil(target / 30));
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          current = target;
+          clearInterval(timer);
+        }
+        setAnimatedIndex(current);
+      }, 30);
+      return () => clearInterval(timer);
+    }
+  }, [screen, gameState]);
 
   const showNotif = useCallback((msg: string) => { setNotification(msg); setTimeout(() => setNotification(null), 3000); }, []);
 
@@ -337,23 +356,39 @@ export default function App() {
   };
 
   const goToNextStation = () => {
-    if (!gameState) return;
-    if (gameState.currentStation < STATIONS.length - 1) {
-      const next = gameState.currentStation + 1;
-      setGameState({ ...gameState, currentStation: next, currentCase: 0, currentTask: 0 });
-      setScreen('station-intro');
-    } else { finishGame(); }
+    setGameState(prev => {
+      if (!prev) return prev;
+      if (prev.currentStation < STATIONS.length - 1) {
+        const next = prev.currentStation + 1;
+        // Используем setTimeout чтобы переключение экрана произошло после обновления state
+        setTimeout(() => setScreen('station-intro'), 50);
+        return { ...prev, currentStation: next, currentCase: 0, currentTask: 0 };
+      } else {
+        // Это была последняя станция — завершаем игру
+        let finalState = recalcScales(prev);
+        finalState.badges = checkBadges(finalState);
+        finalState.completed = true;
+        finalState.endTime = new Date().toISOString();
+        saveGame(finalState);
+        setTimeout(() => setScreen('final'), 100);
+        return finalState;
+      }
+    });
   };
 
   const finishGame = () => {
-    if (!gameState) return;
-    let finalState = recalcScales(gameState);
-    finalState.badges = checkBadges(finalState);
-    finalState.completed = true;
-    finalState.endTime = new Date().toISOString();
-    setGameState(finalState);
-    saveGame(finalState);
-    setScreen('final');
+    // Используем функциональное обновление для работы с актуальным state
+    setGameState(prev => {
+      if (!prev) return prev;
+      let finalState = recalcScales(prev);
+      finalState.badges = checkBadges(finalState);
+      finalState.completed = true;
+      finalState.endTime = new Date().toISOString();
+      saveGame(finalState);
+      return finalState;
+    });
+    // Переключаем экран ПОСЛЕ сохранения
+    setTimeout(() => setScreen('final'), 100);
   };
 
   // ===== TEACHER =====
@@ -608,17 +643,40 @@ export default function App() {
               {items[voiceStep].part === 'Б' && (
                 <div>
                   <p style={{ fontWeight: 600, marginBottom: 8 }}>Ловушка: <span style={{ color: '#e76f51' }}>{items[voiceStep].trap}</span></p>
-                  <p className="text-sm opacity-70 mb-16">Выберите переключатель:</p>
-                  <button className="btn btn-primary btn-full" onClick={() => { setVoiceAnswers({ ...voiceAnswers, [voiceStep]: items[voiceStep].switch_ }); }}>{items[voiceStep].switch_}</button>
-                  <p className="text-sm mt-16" style={{ color: '#2ec4b6' }}>✓ Верный переключатель из конспекта К4</p>
+                  <p className="text-sm opacity-70 mb-16">Выберите корректный переключатель:</p>
+                  {voiceAnswers[voiceStep] ? (
+                    <div>
+                      <p className="text-sm" style={{ color: '#2ec4b6' }}>✓ Верный переключатель из конспекта К4:</p>
+                      <p className="text-sm mt-16" style={{ fontWeight: 600 }}>{items[voiceStep].switch_}</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <button className="btn btn-secondary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'wrong1' })}>Говорить громче и быстрее, чтобы перебить ловушку</button>
+                      <button className="btn btn-primary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'correct' })}>{items[voiceStep].switch_}</button>
+                      <button className="btn btn-secondary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'wrong2' })}>Продолжать в том же ключе, игнорируя ловушку</button>
+                    </div>
+                  )}
                 </div>
               )}
               {items[voiceStep].part === 'В' && (
                 <div>
                   <p style={{ fontWeight: 600, marginBottom: 8 }}>Голос собеседника: <span style={{ color: '#f4a261' }}>{items[voiceStep].voice}</span></p>
-                  <p className="text-sm opacity-70 mb-16">Состояние: <span className="chip chip-amber">{items[voiceStep].state}</span></p>
-                  <p className="text-sm opacity-70 mb-16">Уместная реакция:</p>
-                  <button className="btn btn-primary btn-full" onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: items[voiceStep].reaction })}>{items[voiceStep].reaction}</button>
+                  {voiceAnswers[voiceStep] ? (
+                    <div>
+                      <p className="text-sm opacity-70 mb-16">Состояние: <span className="chip chip-amber">{items[voiceStep].state}</span></p>
+                      <p className="text-sm opacity-70 mb-16">Уместная реакция:</p>
+                      <p className="text-sm" style={{ color: '#2ec4b6', fontWeight: 600 }}>{items[voiceStep].reaction}</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm opacity-70 mb-16">Выберите состояние собеседника:</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <button className="btn btn-secondary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'wrong' })}>Скука / безразличие</button>
+                        <button className="btn btn-primary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'correct' })}>{items[voiceStep].state}</button>
+                        <button className="btn btn-secondary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'wrong2' })}>Радость / воодушевление</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -856,6 +914,25 @@ export default function App() {
         const topGrowth = sortedScales.slice(-3).reverse();
         return (
           <div className="screen active">
+            {/* SVG-сертификат */}
+            <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 400, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
+              <defs>
+                <linearGradient id="certGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#e9c46a" />
+                  <stop offset="100%" stopColor="#f4a261" />
+                </linearGradient>
+              </defs>
+              <rect x="10" y="10" width="380" height="180" rx="12" fill="none" stroke="url(#certGrad)" strokeWidth="3" />
+              <rect x="20" y="20" width="360" height="160" rx="8" fill="rgba(233,196,106,0.05)" />
+              <text x="200" y="60" textAnchor="middle" fill="#e9c46a" fontSize="18" fontFamily="Georgia" fontWeight="bold">СЕРТИФИКАТ</text>
+              <text x="200" y="85" textAnchor="middle" fill="#eef6f4" fontSize="11">Курс ДПО «Медицинская коммуникация»</text>
+              <text x="200" y="110" textAnchor="middle" fill="#2ec4b6" fontSize="14" fontWeight="bold">{gameState.profile?.name}</text>
+              <text x="200" y="135" textAnchor="middle" fill="#eef6f4" fontSize="12">Коммуникативный индекс: {commIndex}/100</text>
+              <text x="200" y="155" textAnchor="middle" fill="#e9c46a" fontSize="11">{level}</text>
+              <circle cx="340" cy="150" r="25" fill="none" stroke="#e76f51" strokeWidth="2" />
+              <text x="340" y="148" textAnchor="middle" fill="#e76f51" fontSize="8">ДПО</text>
+              <text x="340" y="158" textAnchor="middle" fill="#e76f51" fontSize="6">{new Date().getFullYear()}</text>
+            </svg>
             <div className="result-card">
               <div className="text-center mb-24">
                 <h2 style={{ color: '#14343a', marginBottom: 4 }}>Карточка результатов ДПО</h2>
@@ -864,7 +941,7 @@ export default function App() {
               </div>
               <div className="text-center mb-24">
                 <p className="text-sm" style={{ color: '#14343a', opacity: 0.7 }}>Коммуникативный индекс</p>
-                <div className="result-index">{commIndex}/100</div>
+                <div className="result-index">{animatedIndex}/100</div>
                 <p style={{ color: commIndex >= 85 ? '#2ec4b6' : commIndex >= 65 ? '#3a86ff' : commIndex >= 40 ? '#f4a261' : '#e76f51', fontWeight: 700, fontSize: 18 }}>{level}</p>
               </div>
               <SVGRadar scales={gameState.scales} />
