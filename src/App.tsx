@@ -196,16 +196,9 @@ export default function App() {
   const [hudExpanded, setHudExpanded] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [animatedIndex, setAnimatedIndex] = useState(0);
-  const [originalHtml, setOriginalHtml] = useState<string>('');
 
   useEffect(() => { if (gameState) saveGame(gameState); }, [gameState]);
   useEffect(() => { setSavedGames(getAllSavedGames()); }, [screen, gameState]);
-  
-  // Сохраняем исходный HTML при загрузке
-  useEffect(() => {
-    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-    setOriginalHtml(html);
-  }, []);
 
   // Анимация countUp для индекса на финальном экране
   useEffect(() => {
@@ -232,6 +225,11 @@ export default function App() {
 
   // ===== SCORING =====
   const recalcScales = useCallback((state: GameState): GameState => {
+    // Если нет результатов, возвращаем начальные значения
+    if (state.caseResults.length === 0 && state.miniGameResults.length === 0) {
+      return state;
+    }
+    
     const stationScores: Record<string, { total: number; max: number }> = {};
     const stationMiniGames: Record<string, number> = {};
     
@@ -248,7 +246,7 @@ export default function App() {
       stationMiniGames[r.stationId] = r.score; 
     });
     
-    const newScales: Record<string, number> = {};
+    const newScales: Record<string, number> = { ...state.scales };
     const stationMap: Record<string, string> = { 
       station_1: 'sh1', 
       station_2: 'sh2', 
@@ -259,24 +257,29 @@ export default function App() {
     
     // Расчёт шкал Ш1-Ш5 по формуле: 70% modScore + 30% miniGameScore
     for (const [stId, scaleKey] of Object.entries(stationMap)) {
-      const modScore = stationScores[stId] ? stationScores[stId].total / Math.max(1, stationScores[stId].max) : 0;
-      const mgScore = stationMiniGames[stId] || 0;
-      // Формула: round(70 * modScore + 30 * miniGameScore) в процентах
-      newScales[scaleKey] = Math.round(Math.max(0, Math.min(100, (70 * modScore + 30 * mgScore) * 100))) / 100;
+      // Если есть данные для этой станции
+      if (stationScores[stId] || stationMiniGames[stId]) {
+        const modScore = stationScores[stId] ? stationScores[stId].total / Math.max(1, stationScores[stId].max) : 0;
+        const mgScore = stationMiniGames[stId] || 0;
+        // Формула: round(70 * modScore + 30 * miniGameScore) в процентах
+        newScales[scaleKey] = Math.round(Math.max(0, Math.min(100, (70 * modScore + 30 * mgScore) * 100))) / 100;
+      }
     }
     
-    // Расчёт сквозной шкалы Ш6
-    const totalCases = state.caseResults.length;
-    const techniqueApplied = state.caseResults.filter(r => r.technique).length;
-    const ethicsClean = state.ethicsBreach ? 0 : 1;
-    const positiveFlags = Object.values(state.flags).filter(v => v).length;
-    
-    // Формула: 50% техники + 30% перенос + 20% этика
-    newScales.sh6 = Math.round(Math.max(0, Math.min(100, 
-      (50 * (totalCases > 0 ? techniqueApplied / totalCases : 0) + 
-       30 * Math.min(1, positiveFlags / 5) + 
-       20 * ethicsClean) * 100
-    ))) / 100;
+    // Расчёт сквозной шкалы Ш6 только если есть результаты
+    if (state.caseResults.length > 0) {
+      const totalCases = state.caseResults.length;
+      const techniqueApplied = state.caseResults.filter(r => r.technique).length;
+      const ethicsClean = state.ethicsBreach ? 0 : 1;
+      const positiveFlags = Object.values(state.flags).filter(v => v).length;
+      
+      // Формула: 50% техники + 30% перенос + 20% этика
+      newScales.sh6 = Math.round(Math.max(0, Math.min(100, 
+        (50 * (totalCases > 0 ? techniqueApplied / totalCases : 0) + 
+         30 * Math.min(1, positiveFlags / 5) + 
+         20 * ethicsClean) * 100
+      ))) / 100;
+    }
     
     return { ...state, scales: newScales };
   }, []);
@@ -451,9 +454,11 @@ export default function App() {
 
   const downloadGame = () => {
     try {
-      // Используем сохранённый исходный HTML
-      if (originalHtml && originalHtml.length > 1000) {
-        const blob = new Blob([originalHtml], { type: 'text/html;charset=utf-8' });
+      // Используем сохранённый исходный HTML из window
+      const html = (window as any).__ORIGINAL_HTML__;
+      
+      if (html && html.length > 1000) {
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -968,25 +973,6 @@ export default function App() {
         
         return (
           <div className="screen active">
-            {/* SVG-сертификат */}
-            <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 400, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
-              <defs>
-                <linearGradient id="certGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#e9c46a" />
-                  <stop offset="100%" stopColor="#f4a261" />
-                </linearGradient>
-              </defs>
-              <rect x="10" y="10" width="380" height="180" rx="12" fill="none" stroke="url(#certGrad)" strokeWidth="3" />
-              <rect x="20" y="20" width="360" height="160" rx="8" fill="rgba(233,196,106,0.05)" />
-              <text x="200" y="60" textAnchor="middle" fill="#e9c46a" fontSize="18" fontFamily="Georgia" fontWeight="bold">СЕРТИФИКАТ</text>
-              <text x="200" y="85" textAnchor="middle" fill="#eef6f4" fontSize="11">Курс ДПО «Медицинская коммуникация»</text>
-              <text x="200" y="110" textAnchor="middle" fill="#2ec4b6" fontSize="14" fontWeight="bold">{gameState.profile?.name}</text>
-              <text x="200" y="135" textAnchor="middle" fill="#eef6f4" fontSize="12">Коммуникативный индекс: {commIndex}/100</text>
-              <text x="200" y="155" textAnchor="middle" fill="#e9c46a" fontSize="11">{level}</text>
-              <circle cx="340" cy="150" r="25" fill="none" stroke="#e76f51" strokeWidth="2" />
-              <text x="340" y="148" textAnchor="middle" fill="#e76f51" fontSize="8">ДПО</text>
-              <text x="340" y="158" textAnchor="middle" fill="#e76f51" fontSize="6">{new Date().getFullYear()}</text>
-            </svg>
             <div className="result-card">
               <div className="text-center mb-24">
                 <h2 style={{ color: '#14343a', marginBottom: 4 }}>Карточка результатов ДПО</h2>
