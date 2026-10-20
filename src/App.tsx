@@ -196,9 +196,16 @@ export default function App() {
   const [hudExpanded, setHudExpanded] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [animatedIndex, setAnimatedIndex] = useState(0);
+  const [originalHtml, setOriginalHtml] = useState<string>('');
 
   useEffect(() => { if (gameState) saveGame(gameState); }, [gameState]);
   useEffect(() => { setSavedGames(getAllSavedGames()); }, [screen, gameState]);
+  
+  // Сохраняем исходный HTML при загрузке
+  useEffect(() => {
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    setOriginalHtml(html);
+  }, []);
 
   // Анимация countUp для индекса на финальном экране
   useEffect(() => {
@@ -442,29 +449,31 @@ export default function App() {
     const a = document.createElement('a'); a.href = url; a.download = 'medcomm_results.csv'; a.click(); URL.revokeObjectURL(url);
   };
 
-  const downloadGame = async () => {
+  const downloadGame = () => {
     try {
-      // Получаем исходный HTML-файл
-      // Используем origin + pathname без query/hash
-      const url = window.location.origin + window.location.pathname;
-      const response = await fetch(url);
-      const html = await response.text();
-      
-      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = 'Govoryashchiy_Vrach_DPO_Kvest.html';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-      }, 200);
-      showNotif('Игра скачана! Откройте файл двойным кликом.');
+      // Используем сохранённый исходный HTML
+      if (originalHtml && originalHtml.length > 1000) {
+        const blob = new Blob([originalHtml], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Govoryashchiy_Vrach_DPO_Kvest.html';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+        
+        showNotif('✓ Игра скачана! Откройте файл двойным кликом.');
+      } else {
+        throw new Error('Исходный HTML не сохранён');
+      }
     } catch (error) {
       console.error('Ошибка скачивания:', error);
-      showNotif('Ошибка скачивания. Попробуйте обновить страницу.');
+      showNotif('💡 Используйте Ctrl+S (Cmd+S на Mac) для сохранения страницы');
     }
   };
 
