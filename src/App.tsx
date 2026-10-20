@@ -204,6 +204,7 @@ export default function App() {
   useEffect(() => {
     if (screen === 'final' && gameState) {
       const target = calcCommIndex(gameState.scales);
+      setAnimatedIndex(0); // Сбрасываем перед анимацией
       let current = 0;
       const step = Math.max(1, Math.ceil(target / 30));
       const timer = setInterval(() => {
@@ -215,6 +216,8 @@ export default function App() {
         setAnimatedIndex(current);
       }, 30);
       return () => clearInterval(timer);
+    } else if (screen !== 'final') {
+      setAnimatedIndex(0); // Сбрасываем когда уходим с финального экрана
     }
   }, [screen, gameState]);
 
@@ -224,25 +227,50 @@ export default function App() {
   const recalcScales = useCallback((state: GameState): GameState => {
     const stationScores: Record<string, { total: number; max: number }> = {};
     const stationMiniGames: Record<string, number> = {};
+    
+    // Подсчёт баллов по станциям
     state.caseResults.forEach(r => {
       if (!stationScores[r.stationId]) stationScores[r.stationId] = { total: 0, max: 0 };
       const s = r.rating === 'best' ? 1 : r.rating === 'acceptable' ? 0.6 : 0;
       stationScores[r.stationId].total += s;
       stationScores[r.stationId].max += 1;
     });
-    state.miniGameResults.forEach(r => { stationMiniGames[r.stationId] = r.score; });
+    
+    // Результаты мини-игр
+    state.miniGameResults.forEach(r => { 
+      stationMiniGames[r.stationId] = r.score; 
+    });
+    
     const newScales: Record<string, number> = {};
-    const stationMap: Record<string, string> = { station_1: 'sh1', station_2: 'sh2', station_3: 'sh3', station_4: 'sh4', station_5: 'sh5' };
+    const stationMap: Record<string, string> = { 
+      station_1: 'sh1', 
+      station_2: 'sh2', 
+      station_3: 'sh3', 
+      station_4: 'sh4', 
+      station_5: 'sh5' 
+    };
+    
+    // Расчёт шкал Ш1-Ш5 по формуле: 70% modScore + 30% miniGameScore
     for (const [stId, scaleKey] of Object.entries(stationMap)) {
       const modScore = stationScores[stId] ? stationScores[stId].total / Math.max(1, stationScores[stId].max) : 0;
       const mgScore = stationMiniGames[stId] || 0;
-      newScales[scaleKey] = Math.round(Math.max(0, Math.min(100, 70 * modScore * 100 + 30 * mgScore * 100))) / 100;
+      // Формула: round(70 * modScore + 30 * miniGameScore) в процентах
+      newScales[scaleKey] = Math.round(Math.max(0, Math.min(100, (70 * modScore + 30 * mgScore) * 100))) / 100;
     }
+    
+    // Расчёт сквозной шкалы Ш6
     const totalCases = state.caseResults.length;
     const techniqueApplied = state.caseResults.filter(r => r.technique).length;
     const ethicsClean = state.ethicsBreach ? 0 : 1;
     const positiveFlags = Object.values(state.flags).filter(v => v).length;
-    newScales.sh6 = Math.round(Math.max(0, Math.min(100, 50 * (totalCases > 0 ? techniqueApplied / totalCases : 0) * 100 + 30 * Math.min(1, positiveFlags / 5) * 100 + 20 * ethicsClean * 100))) / 100;
+    
+    // Формула: 50% техники + 30% перенос + 20% этика
+    newScales.sh6 = Math.round(Math.max(0, Math.min(100, 
+      (50 * (totalCases > 0 ? techniqueApplied / totalCases : 0) + 
+       30 * Math.min(1, positiveFlags / 5) + 
+       20 * ethicsClean) * 100
+    ))) / 100;
+    
     return { ...state, scales: newScales };
   }, []);
 
@@ -356,39 +384,43 @@ export default function App() {
   };
 
   const goToNextStation = () => {
-    setGameState(prev => {
-      if (!prev) return prev;
-      if (prev.currentStation < STATIONS.length - 1) {
-        const next = prev.currentStation + 1;
-        // Используем setTimeout чтобы переключение экрана произошло после обновления state
-        setTimeout(() => setScreen('station-intro'), 50);
-        return { ...prev, currentStation: next, currentCase: 0, currentTask: 0 };
-      } else {
-        // Это была последняя станция — завершаем игру
-        let finalState = recalcScales(prev);
-        finalState.badges = checkBadges(finalState);
-        finalState.completed = true;
-        finalState.endTime = new Date().toISOString();
-        saveGame(finalState);
-        setTimeout(() => setScreen('final'), 100);
-        return finalState;
-      }
-    });
+    if (!gameState) return;
+    
+    if (gameState.currentStation < STATIONS.length - 1) {
+      const next = gameState.currentStation + 1;
+      const newState = { ...gameState, currentStation: next, currentCase: 0, currentTask: 0 };
+      setGameState(newState);
+      setScreen('station-intro');
+    } else {
+      // Это была последняя станция — завершаем игру
+      finishGame();
+    }
   };
 
   const finishGame = () => {
-    // Используем функциональное обновление для работы с актуальным state
-    setGameState(prev => {
-      if (!prev) return prev;
-      let finalState = recalcScales(prev);
-      finalState.badges = checkBadges(finalState);
-      finalState.completed = true;
-      finalState.endTime = new Date().toISOString();
-      saveGame(finalState);
-      return finalState;
-    });
-    // Переключаем экран ПОСЛЕ сохранения
-    setTimeout(() => setScreen('final'), 100);
+    if (!gameState) {
+      console.error('finishGame: gameState is null');
+      return;
+    }
+    
+    console.log('finishGame: starting with gameState', gameState);
+    
+    // Вычисляем финальное состояние
+    let finalState = recalcScales(gameState);
+    finalState.badges = checkBadges(finalState);
+    finalState.completed = true;
+    finalState.endTime = new Date().toISOString();
+    
+    console.log('finishGame: finalState calculated', finalState);
+    console.log('finishGame: scales', finalState.scales);
+    console.log('finishGame: commIndex', calcCommIndex(finalState.scales));
+    
+    // Сохраняем и обновляем state
+    saveGame(finalState);
+    setGameState(finalState);
+    
+    // Переключаем экран
+    setScreen('final');
   };
 
   // ===== TEACHER =====
@@ -410,21 +442,30 @@ export default function App() {
     const a = document.createElement('a'); a.href = url; a.download = 'medcomm_results.csv'; a.click(); URL.revokeObjectURL(url);
   };
 
-  const downloadGame = () => {
-    // Собираем полный HTML документа, включая все инлайновые стили и скрипты
-    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Govoryashchiy_Vrach_DPO_Kvest.html';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 200);
-    showNotif('Игра скачана! Откройте файл двойным кликом.');
+  const downloadGame = async () => {
+    try {
+      // Получаем исходный HTML-файл
+      // Используем origin + pathname без query/hash
+      const url = window.location.origin + window.location.pathname;
+      const response = await fetch(url);
+      const html = await response.text();
+      
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'Govoryashchiy_Vrach_DPO_Kvest.html';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      }, 200);
+      showNotif('Игра скачана! Откройте файл двойным кликом.');
+    } catch (error) {
+      console.error('Ошибка скачивания:', error);
+      showNotif('Ошибка скачивания. Попробуйте обновить страницу.');
+    }
   };
 
   const exportTxt = () => {
@@ -912,6 +953,10 @@ export default function App() {
         const sortedScales = scaleKeys.map(k => ({ key: k, val: gameState.scales[k] })).sort((a, b) => b.val - a.val);
         const topStrengths = sortedScales.slice(0, 3);
         const topGrowth = sortedScales.slice(-3).reverse();
+        
+        // Используем commIndex напрямую, если анимация ещё не завершилась
+        const displayIndex = animatedIndex > 0 ? animatedIndex : commIndex;
+        
         return (
           <div className="screen active">
             {/* SVG-сертификат */}
@@ -941,7 +986,7 @@ export default function App() {
               </div>
               <div className="text-center mb-24">
                 <p className="text-sm" style={{ color: '#14343a', opacity: 0.7 }}>Коммуникативный индекс</p>
-                <div className="result-index">{animatedIndex}/100</div>
+                <div className="result-index">{displayIndex}/100</div>
                 <p style={{ color: commIndex >= 85 ? '#2ec4b6' : commIndex >= 65 ? '#3a86ff' : commIndex >= 40 ? '#f4a261' : '#e76f51', fontWeight: 700, fontSize: 18 }}>{level}</p>
               </div>
               <SVGRadar scales={gameState.scales} />
