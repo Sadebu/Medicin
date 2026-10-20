@@ -282,13 +282,33 @@ export default function App() {
     const option = task.options.find(o => o.id === selectedOption);
     if (!option) return;
     const result: CaseResult = { caseId: caseData.id, stationId: station.id, optionId: option.id, rating: option.rating, technique: option.technique, ethicsBreach: option.ethicsBreach || false, timestamp: new Date().toISOString() };
-    let newState = { ...gameState, caseResults: [...gameState.caseResults, result], ethicsBreach: gameState.ethicsBreach || (option.ethicsBreach || false) };
-    if (option.ethicsBreach) newState.flags = { ...newState.flags, ethics_violation: true };
-    if (option.rating === 'best') newState.flags = { ...newState.flags, [`best_${station.id}`]: true };
-    newState = recalcScales(newState);
-    newState.badges = checkBadges(newState);
-    newState.glossaryUnlocked = unlockGlossary(newState, option.technique);
-    setGameState(newState);
+    
+    // Создаём новое состояние с добавлением результата
+    const newStateWithResult = { 
+      ...gameState, 
+      caseResults: [...gameState.caseResults, result], 
+      ethicsBreach: gameState.ethicsBreach || (option.ethicsBreach || false) 
+    };
+    
+    // Добавляем флаги
+    if (option.ethicsBreach) {
+      newStateWithResult.flags = { ...newStateWithResult.flags, ethics_violation: true };
+    }
+    if (option.rating === 'best') {
+      newStateWithResult.flags = { ...newStateWithResult.flags, [`best_${station.id}`]: true };
+    }
+    
+    // Пересчитываем шкалы и сохраняем результат
+    const newStateWithScales = recalcScales(newStateWithResult);
+    
+    // Обновляем бейджи и глоссарий
+    const finalState = {
+      ...newStateWithScales,
+      badges: checkBadges(newStateWithScales),
+      glossaryUnlocked: unlockGlossary(newStateWithScales, option.technique)
+    };
+    
+    setGameState(finalState);
     setCurrentReflection(option);
     setScreen('reflection');
   };
@@ -325,10 +345,23 @@ export default function App() {
     if (!gameState) return;
     const station = STATIONS[gameState.currentStation];
     const mgResult: MiniGameResult = { stationId: station.id, score: Math.max(0, Math.min(1, score)), timestamp: new Date().toISOString() };
-    let newState = { ...gameState, miniGameResults: [...gameState.miniGameResults, mgResult] };
-    newState = recalcScales(newState);
-    newState.badges = checkBadges(newState);
-    setGameState(newState);
+    
+    // Создаём новое состояние с добавлением результата мини-игры
+    const newStateWithResult = { 
+      ...gameState, 
+      miniGameResults: [...gameState.miniGameResults, mgResult] 
+    };
+    
+    // Пересчитываем шкалы
+    const newStateWithScales = recalcScales(newStateWithResult);
+    
+    // Обновляем бейджи
+    const finalState = {
+      ...newStateWithScales,
+      badges: checkBadges(newStateWithScales)
+    };
+    
+    setGameState(finalState);
     setMiniGameScore(score);
     setMiniGameCompleted(true);
   };
@@ -336,9 +369,19 @@ export default function App() {
   const goToNextStation = () => {
     if (!gameState) return;
     
+    // Отладочная информация
+    console.log('=== goToNextStation ===');
+    console.log('Current station:', gameState.currentStation);
+    console.log('Case results count:', gameState.caseResults.length);
+    console.log('Mini-game results count:', gameState.miniGameResults.length);
+    
     if (gameState.currentStation < STATIONS.length - 1) {
       const next = gameState.currentStation + 1;
       const newState = { ...gameState, currentStation: next, currentCase: 0, currentTask: 0 };
+      
+      // Сохраняем промежуточное состояние
+      saveGame(newState);
+      
       setGameState(newState);
       setScreen('station-intro');
     } else {
@@ -355,6 +398,24 @@ export default function App() {
         return prevState;
       }
       
+      // Отладочная информация
+      console.log('=== finishGame Debug ===');
+      console.log('Total caseResults:', prevState.caseResults.length);
+      console.log('Total miniGameResults:', prevState.miniGameResults.length);
+      console.log('Case results by station:', 
+        prevState.caseResults.reduce((acc, r) => {
+          acc[r.stationId] = (acc[r.stationId] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      );
+      console.log('Mini-game results by station:',
+        prevState.miniGameResults.reduce((acc, r) => {
+          acc[r.stationId] = r.score;
+          return acc;
+        }, {} as Record<string, number>)
+      );
+      console.log('Current scales before recalc:', prevState.scales);
+      
       // Проверяем, что есть результаты
       if (prevState.caseResults.length === 0 && prevState.miniGameResults.length === 0) {
         console.warn('finishGame: нет результатов, используем текущие шкалы');
@@ -362,6 +423,9 @@ export default function App() {
       
       // Вычисляем финальное состояние на основе актуального prevState
       const finalState = recalcScales(prevState);
+      
+      console.log('Scales after recalc:', finalState.scales);
+      
       finalState.badges = checkBadges(finalState);
       finalState.completed = true;
       finalState.endTime = new Date().toISOString();
