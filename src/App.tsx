@@ -225,7 +225,7 @@ export default function App() {
 
   // ===== SCORING =====
   const recalcScales = useCallback((state: GameState): GameState => {
-    // Если нет результатов, возвращаем начальные значения
+    // Если нет результатов, возвращаем состояние без изменений
     if (state.caseResults.length === 0 && state.miniGameResults.length === 0) {
       return state;
     }
@@ -257,28 +257,36 @@ export default function App() {
     
     // Расчёт шкал Ш1-Ш5 по формуле: 70% modScore + 30% miniGameScore
     for (const [stId, scaleKey] of Object.entries(stationMap)) {
-      // Если есть данные для этой станции
-      if (stationScores[stId] || stationMiniGames[stId]) {
-        const modScore = stationScores[stId] ? stationScores[stId].total / Math.max(1, stationScores[stId].max) : 0;
-        const mgScore = stationMiniGames[stId] || 0;
-        // Формула: round(70 * modScore + 30 * miniGameScore) в процентах
-        newScales[scaleKey] = Math.round(Math.max(0, Math.min(100, (70 * modScore + 30 * mgScore) * 100))) / 100;
+      const hasCaseResults = stationScores[stId] && stationScores[stId].max > 0;
+      const hasMiniGame = stationMiniGames[stId] !== undefined;
+      
+      // Если станция пройдена (есть кейсы или мини-игра)
+      if (hasCaseResults || hasMiniGame) {
+        const modScore = hasCaseResults ? stationScores[stId].total / stationScores[stId].max : 0;
+        const mgScore = hasMiniGame ? stationMiniGames[stId] : 0;
+        
+        // Если есть только мини-игра без кейсов, используем базовое значение для кейсов
+        const caseComponent = hasCaseResults ? 70 * modScore : 70 * 0.5;
+        const mgComponent = hasMiniGame ? 30 * mgScore : 30 * 0.5;
+        
+        newScales[scaleKey] = Math.round(Math.max(0, Math.min(100, caseComponent + mgComponent)));
       }
+      // Если станция не пройдена, оставляем начальное значение (50)
     }
     
-    // Расчёт сквозной шкалы Ш6 только если есть результаты
-    if (state.caseResults.length > 0) {
-      const totalCases = state.caseResults.length;
+    // Расчёт сквозной шкалы Ш6
+    const totalCases = state.caseResults.length;
+    if (totalCases > 0) {
       const techniqueApplied = state.caseResults.filter(r => r.technique).length;
       const ethicsClean = state.ethicsBreach ? 0 : 1;
       const positiveFlags = Object.values(state.flags).filter(v => v).length;
       
-      // Формула: 50% техники + 30% перенос + 20% этика
-      newScales.sh6 = Math.round(Math.max(0, Math.min(100, 
-        (50 * (totalCases > 0 ? techniqueApplied / totalCases : 0) + 
-         30 * Math.min(1, positiveFlags / 5) + 
-         20 * ethicsClean) * 100
-      ))) / 100;
+      // Формула: 50% техники + 30% перенос + 20% этика (в процентах)
+      const techniqueScore = 50 * (techniqueApplied / totalCases);
+      const transferScore = 30 * Math.min(1, positiveFlags / 5);
+      const ethicsScore = 20 * ethicsClean;
+      
+      newScales.sh6 = Math.round(Math.max(0, Math.min(100, techniqueScore + transferScore + ethicsScore)));
     }
     
     return { ...state, scales: newScales };
@@ -408,29 +416,34 @@ export default function App() {
   };
 
   const finishGame = () => {
-    if (!gameState) {
-      console.error('finishGame: gameState is null');
-      return;
-    }
+    // Используем функциональное обновление для гарантии актуального состояния
+    setGameState(prevState => {
+      if (!prevState) {
+        console.error('finishGame: prevState is null');
+        return prevState;
+      }
+      
+      // Проверяем, что есть результаты
+      if (prevState.caseResults.length === 0 && prevState.miniGameResults.length === 0) {
+        console.warn('finishGame: нет результатов, используем текущие шкалы');
+      }
+      
+      // Вычисляем финальное состояние на основе актуального prevState
+      const finalState = recalcScales(prevState);
+      finalState.badges = checkBadges(finalState);
+      finalState.completed = true;
+      finalState.endTime = new Date().toISOString();
+      
+      // Сохраняем
+      saveGame(finalState);
+      
+      return finalState;
+    });
     
-    console.log('finishGame: starting with gameState', gameState);
-    
-    // Вычисляем финальное состояние
-    let finalState = recalcScales(gameState);
-    finalState.badges = checkBadges(finalState);
-    finalState.completed = true;
-    finalState.endTime = new Date().toISOString();
-    
-    console.log('finishGame: finalState calculated', finalState);
-    console.log('finishGame: scales', finalState.scales);
-    console.log('finishGame: commIndex', calcCommIndex(finalState.scales));
-    
-    // Сохраняем и обновляем state
-    saveGame(finalState);
-    setGameState(finalState);
-    
-    // Переключаем экран
-    setScreen('final');
+    // Переключаем экран после обновления state
+    setTimeout(() => {
+      setScreen('final');
+    }, 100);
   };
 
   // ===== TEACHER =====
@@ -968,8 +981,8 @@ export default function App() {
         const topStrengths = sortedScales.slice(0, 3);
         const topGrowth = sortedScales.slice(-3).reverse();
         
-        // Используем commIndex напрямую, если анимация ещё не завершилась
-        const displayIndex = animatedIndex > 0 ? animatedIndex : commIndex;
+        // Используем commIndex напрямую (анимация опциональна)
+        const displayIndex = commIndex;
         
         return (
           <div className="screen active">
