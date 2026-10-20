@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  STATIONS, SCALE_NAMES, LEVELS, BADGES, GLOSSARY, TEACHER_PASSWORD, CASE_SVGS,
+  STATIONS, SCALE_NAMES, LEVELS, BADGES, GLOSSARY, TEACHER_PASSWORD,
   type CaseOption
 } from './data/gameData';
 
@@ -72,76 +72,8 @@ function createInitialState(profile: PlayerProfile): GameState {
 }
 
 // ===== SVG COMPONENTS =====
-function SVGMap() {
-  return (
-    <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 400, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
-      <defs><linearGradient id="pathGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#2ec4b6" /><stop offset="100%" stopColor="#e9c46a" /></linearGradient></defs>
-      <path d="M 40 100 Q 100 40 160 100 Q 220 160 280 100 Q 340 40 380 100" fill="none" stroke="url(#pathGrad)" strokeWidth="3" strokeDasharray="8,4" />
-      {[40, 120, 200, 280, 360].map((x, i) => (
-        <g key={i}>
-          <circle cx={x} cy={100} r="18" fill="rgba(46,196,182,0.2)" stroke="#2ec4b6" strokeWidth="2" />
-          <text x={x} y={105} textAnchor="middle" fill="#eef6f4" fontSize="14" fontWeight="bold">{i + 1}</text>
-          <text x={x} y={140} textAnchor="middle" fill="#eef6f4" fontSize="9" opacity="0.7">{['Коммуникация', 'Профайлинг', '5 минут', 'Голос', 'Превенция'][i]}</text>
-        </g>
-      ))}
-    </svg>
-  );
-}
 
-function SVGStation({ idx }: { idx: number }) {
-  const svgs = [
-    // Station 1
-    <svg key="s1" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
-      <rect x="20" y="30" width="260" height="140" rx="10" fill="rgba(46,196,182,0.08)" stroke="#2ec4b6" strokeWidth="1.5" />
-      <circle cx="100" cy="100" r="25" fill="rgba(231,111,81,0.2)" stroke="#e76f51" strokeWidth="1.5" /><text x="100" y="105" textAnchor="middle" fill="#e76f51" fontSize="14">✕</text>
-      <path d="M 140 100 L 180 100" stroke="#e9c46a" strokeWidth="2" strokeDasharray="4,3" />
-      <circle cx="210" cy="100" r="25" fill="rgba(46,196,182,0.2)" stroke="#2ec4b6" strokeWidth="1.5" /><text x="210" y="105" textAnchor="middle" fill="#2ec4b6" fontSize="14">✓</text>
-      <text x="100" y="145" textAnchor="middle" fill="#eef6f4" fontSize="10" opacity="0.7">Барьер</text>
-      <text x="210" y="145" textAnchor="middle" fill="#eef6f4" fontSize="10" opacity="0.7">Мост</text>
-      <text x="150" y="25" textAnchor="middle" fill="#e9c46a" fontSize="12" fontFamily="Georgia">Модели коммуникации</text>
-    </svg>,
-    // Station 2
-    <svg key="s2" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
-      <ellipse cx="150" cy="90" rx="40" ry="50" fill="rgba(58,134,255,0.1)" stroke="#3a86ff" strokeWidth="1.5" />
-      <ellipse cx="150" cy="90" rx="55" ry="65" fill="none" stroke="rgba(58,134,255,0.3)" strokeWidth="1" strokeDasharray="4,3" />
-      <ellipse cx="150" cy="90" rx="70" ry="80" fill="none" stroke="rgba(58,134,255,0.15)" strokeWidth="1" strokeDasharray="4,3" />
-      <text x="150" y="75" textAnchor="middle" fill="#3a86ff" fontSize="9">Тревожный</text>
-      <text x="150" y="95" textAnchor="middle" fill="#3a86ff" fontSize="9">Агрессивный</text>
-      <text x="150" y="115" textAnchor="middle" fill="#3a86ff" fontSize="9">Всезнайка</text>
-      <text x="150" y="185" textAnchor="middle" fill="#e9c46a" fontSize="11" fontFamily="Georgia">6 типов профиля</text>
-    </svg>,
-    // Station 3
-    <svg key="s3" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
-      <rect x="80" y="60" width="60" height="80" rx="5" fill="rgba(244,162,97,0.1)" stroke="#f4a261" strokeWidth="1.5" />
-      <rect x="160" y="60" width="60" height="80" rx="5" fill="rgba(244,162,97,0.1)" stroke="#f4a261" strokeWidth="1.5" />
-      <circle cx="110" cy="80" r="10" fill="rgba(244,162,97,0.3)" /><circle cx="190" cy="80" r="10" fill="rgba(244,162,97,0.3)" />
-      <rect x="120" y="90" width="60" height="30" rx="3" fill="rgba(233,196,106,0.1)" stroke="#e9c46a" strokeWidth="1" />
-      <text x="150" y="110" textAnchor="middle" fill="#e9c46a" fontSize="9">Стол</text>
-      <path d="M 100 50 Q 150 30 200 50" fill="none" stroke="#2ec4b6" strokeWidth="1.5" strokeDasharray="3,3" />
-      <text x="150" y="25" textAnchor="middle" fill="#2ec4b6" fontSize="10">Раппорт</text>
-      <text x="150" y="185" textAnchor="middle" fill="#e9c46a" fontSize="11" fontFamily="Georgia">Кабинет приёма</text>
-    </svg>,
-    // Station 4
-    <svg key="s4" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
-      <circle cx="100" cy="100" r="30" fill="rgba(46,196,182,0.1)" stroke="#2ec4b6" strokeWidth="1.5" />
-      <circle cx="100" cy="85" r="12" fill="rgba(46,196,182,0.2)" />
-      <path d="M 140 80 Q 160 70 180 80 Q 200 90 220 80 Q 240 70 260 80" fill="none" stroke="#f4a261" strokeWidth="2"><animate attributeName="d" dur="2s" repeatCount="indefinite" values="M 140 80 Q 160 70 180 80 Q 200 90 220 80 Q 240 70 260 80;M 140 80 Q 160 90 180 80 Q 200 70 220 80 Q 240 90 260 80;M 140 80 Q 160 70 180 80 Q 200 90 220 80 Q 240 70 260 80" /></path>
-      <path d="M 140 100 Q 160 90 180 100 Q 200 110 220 100 Q 240 90 260 100" fill="none" stroke="#e9c46a" strokeWidth="1.5" opacity="0.6"><animate attributeName="d" dur="3s" repeatCount="indefinite" values="M 140 100 Q 160 90 180 100 Q 200 110 220 100 Q 240 90 260 100;M 140 100 Q 160 110 180 100 Q 200 90 220 100 Q 240 110 260 100;M 140 100 Q 160 90 180 100 Q 200 110 220 100 Q 240 90 260 100" /></path>
-      <text x="200" y="140" textAnchor="middle" fill="#eef6f4" fontSize="10" opacity="0.7">Тон • Темп • Пауза</text>
-      <text x="150" y="185" textAnchor="middle" fill="#e9c46a" fontSize="11" fontFamily="Georgia">Голос как инструмент</text>
-    </svg>,
-    // Station 5
-    <svg key="s5" viewBox="0 0 300 200" style={{ width: '100%', maxWidth: 300, margin: '0 auto 24px', display: 'block', pointerEvents: 'none' }}>
-      <path d="M 30 120 L 120 120" stroke="#e76f51" strokeWidth="2" /><path d="M 180 120 L 270 120" stroke="#e76f51" strokeWidth="2" />
-      <path d="M 120 120 Q 150 80 180 120" fill="none" stroke="#2ec4b6" strokeWidth="3" />
-      <line x1="130" y1="120" x2="130" y2="140" stroke="#e76f51" strokeWidth="1" strokeDasharray="3,2" /><line x1="170" y1="120" x2="170" y2="140" stroke="#e76f51" strokeWidth="1" strokeDasharray="3,2" />
-      <text x="150" y="155" textAnchor="middle" fill="#e76f51" fontSize="9" opacity="0.7">Конфликт</text>
-      <text x="150" y="75" textAnchor="middle" fill="#2ec4b6" fontSize="10">Мост превенции</text>
-      <text x="150" y="185" textAnchor="middle" fill="#e9c46a" fontSize="11" fontFamily="Georgia">Предупреди, не туши</text>
-    </svg>
-  ];
-  return svgs[idx] || null;
-}
+
 
 function SVGRadar({ scales }: { scales: Record<string, number> }) {
   const keys = ['sh1', 'sh2', 'sh3', 'sh4', 'sh5', 'sh6'];
@@ -155,7 +87,7 @@ function SVGRadar({ scales }: { scales: Record<string, number> }) {
       {[0.25, 0.5, 0.75, 1].map(f => (<polygon key={f} points={keys.map((_, i) => { const p = getPoint(i, f * 100); return `${p.x},${p.y}`; }).join(' ')} fill="none" stroke="rgba(238,246,244,0.1)" strokeWidth="1" />))}
       {keys.map((_, i) => { const p = getPoint(i, 100); return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(238,246,244,0.1)" strokeWidth="1" />; })}
       <path d={pathD} fill="rgba(46,196,182,0.2)" stroke="#2ec4b6" strokeWidth="2" />
-      {points.map((p, i) => (<g key={i}><circle cx={p.x} cy={p.y} r="4" fill="#2ec4b6" /><text x={getPoint(i, 120).x} y={getPoint(i, 120).y} textAnchor="middle" fill="#eef6f4" fontSize="10" dominantBaseline="middle">{labels[i]}</text></g>))}
+      {points.map((p, i) => (<g key={i}><circle cx={p.x} cy={p.y} r="4" fill="#2ec4b6" /><text x={getPoint(i, 120).x} y={getPoint(i, 120).y} textAnchor="middle" fill="#14343a" fontSize="10" fontWeight="bold" dominantBaseline="middle">{labels[i]}</text></g>))}
     </svg>
   );
 }
@@ -812,7 +744,6 @@ export default function App() {
         return (
           <div className="screen active">
             <div style={{ textAlign: 'center', paddingTop: 40 }}>
-              <SVGMap />
               <h1 className="title-hero">ГОВОРЯЩИЙ ВРАЧ</h1>
               <p className="subtitle-hero">Квест медицинской коммуникации • ДПО</p>
               <div className="glass-card" style={{ textAlign: 'left', marginTop: 24 }}>
@@ -911,7 +842,6 @@ export default function App() {
               <h2 style={{ color: '#e9c46a', marginBottom: 8 }}>{station.title}</h2>
               <p className="text-sm opacity-70 mb-16">{station.konspekt} — {station.scale}</p>
             </div>
-            <SVGStation idx={gameState.currentStation} />
             {station.intro.map((p, i) => (<div key={i} className="glass-card" style={{ animationDelay: `${i * 0.1}s` }}><p>{p}</p></div>))}
             <button className="btn btn-primary btn-full mt-24" onClick={startCase}>Начать кейсы →</button>
           </div>
@@ -922,7 +852,6 @@ export default function App() {
         const st = STATIONS[gameState.currentStation];
         const cs = st.cases[gameState.currentCase];
         const task = cs.tasks[gameState.currentTask];
-        const caseSvg = CASE_SVGS[cs.svgId] || '';
         return (
           <div className="screen active">
             {renderHUD()}
@@ -932,7 +861,6 @@ export default function App() {
             </div>
             <h3 style={{ color: '#2ec4b6', marginBottom: 8 }}>{cs.title}</h3>
             {cs.respondent && <p className="text-sm opacity-70 mb-16">Собеседник: {cs.respondent}</p>}
-            {caseSvg && <div dangerouslySetInnerHTML={{ __html: caseSvg }} />}
             {cs.intro.map((p, i) => (<p key={i} style={{ marginBottom: 12, lineHeight: 1.7 }}>{p}</p>))}
             <div className="glass-card" style={{ marginTop: 16, borderColor: 'rgba(58,134,255,0.3)' }}>
               <p style={{ fontWeight: 600, marginBottom: 8 }}>{task.prompt}</p>
