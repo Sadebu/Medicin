@@ -24,7 +24,7 @@ interface GameState {
   completed: boolean;
 }
 
-type Screen = 'welcome' | 'role' | 'profile' | 'game' | 'station-intro' | 'case' | 'reflection' | 'minigame' | 'final' | 'teacher' | 'teacher-detail' | 'glossary';
+type Screen = 'welcome' | 'role' | 'profile' | 'game' | 'station-intro' | 'case' | 'reflection' | 'minigame' | 'final' | 'teacher' | 'teacher-detail' | 'teacher-answers' | 'glossary';
 
 // ===== HELPERS =====
 function getLevel(score: number): string {
@@ -850,6 +850,209 @@ export default function App() {
           </div>
         );
 
+      case 'teacher-answers':
+        if (!teacherAuth) return null;
+        return (
+          <div className="screen active">
+            <h2 style={{ color: '#e9c46a', marginBottom: 16 }}>📋 Шкала эталонов</h2>
+            <p className="text-sm opacity-70 mb-24">Правильные ответы и обоснования по всем кейсам и мини-играм</p>
+            
+            {STATIONS.map((station, stationIdx) => (
+              <div key={station.id} className="glass-card" style={{ marginBottom: 24 }}>
+                <div style={{ borderBottom: '2px solid #e9c46a', paddingBottom: 12, marginBottom: 16 }}>
+                  <h3 style={{ color: '#e9c46a', marginBottom: 4 }}>
+                    Станция {stationIdx + 1}: {station.title}
+                  </h3>
+                  <p className="text-sm opacity-70">{station.konspekt} — {station.scale}</p>
+                </div>
+                
+                {/* Кейсы */}
+                <h4 style={{ color: '#2ec4b6', marginBottom: 12 }}>Кейсы:</h4>
+                {station.cases.map((caseItem, caseIdx) => (
+                  <div key={caseItem.id} style={{ marginBottom: 20, padding: 16, background: 'rgba(46,196,182,0.05)', borderRadius: 12, border: '1px solid rgba(46,196,182,0.2)' }}>
+                    <p style={{ fontWeight: 700, color: '#2ec4b6', marginBottom: 8 }}>
+                      Кейс {caseIdx + 1}: {caseItem.title}
+                    </p>
+                    {caseItem.respondent && (
+                      <p className="text-sm opacity-70 mb-16">Собеседник: {caseItem.respondent}</p>
+                    )}
+                    
+                    {caseItem.tasks.map((task, taskIdx) => {
+                      const bestOption = task.options.find(opt => opt.rating === 'best');
+                      return (
+                        <div key={task.id} style={{ marginBottom: 12 }}>
+                          <p className="text-sm" style={{ fontWeight: 600, marginBottom: 8 }}>
+                            Задача {taskIdx + 1}: {task.prompt}
+                          </p>
+                          {task.context && (
+                            <p className="text-sm opacity-70 mb-16">Контекст: {task.context}</p>
+                          )}
+                          
+                          {bestOption && (
+                            <div style={{ background: 'rgba(46,196,182,0.1)', padding: 12, borderRadius: 8, border: '1px solid rgba(46,196,182,0.3)' }}>
+                              <p style={{ fontWeight: 600, color: '#2ec4b6', marginBottom: 8 }}>
+                                ✓ Правильный ответ (best):
+                              </p>
+                              <p style={{ marginBottom: 8 }}>{bestOption.text}</p>
+                              {bestOption.technique && (
+                                <p className="text-sm" style={{ color: '#e9c46a', marginBottom: 8 }}>
+                                  📌 Техника: {bestOption.technique}
+                                </p>
+                              )}
+                              <p className="text-sm">{bestOption.why}</p>
+                              <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                {Object.entries(bestOption.effects).map(([key, val]) => (
+                                  <span key={key} className="chip chip-mint">
+                                    {SCALE_NAMES[key]}: +{val}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Показываем другие варианты */}
+                          <div style={{ marginTop: 12 }}>
+                            <p className="text-sm opacity-70 mb-8">Другие варианты:</p>
+                            {task.options.filter(opt => opt.rating !== 'best').map(opt => (
+                              <div key={opt.id} style={{ 
+                                padding: 10, 
+                                marginBottom: 8, 
+                                borderRadius: 8, 
+                                background: opt.rating === 'acceptable' ? 'rgba(244,162,97,0.08)' : 'rgba(231,111,81,0.08)',
+                                border: `1px solid ${opt.rating === 'acceptable' ? 'rgba(244,162,97,0.3)' : 'rgba(231,111,81,0.3)'}`
+                              }}>
+                                <p className="text-sm" style={{ fontWeight: 600, color: opt.rating === 'acceptable' ? '#f4a261' : '#e76f51', marginBottom: 4 }}>
+                                  {opt.rating === 'acceptable' ? '⚠️ Приемлемо' : '❌ Не сработало'}:
+                                </p>
+                                <p className="text-sm" style={{ marginBottom: 6 }}>{opt.text}</p>
+                                <p className="text-sm opacity-70">{opt.why}</p>
+                                {opt.ethicsBreach && (
+                                  <p className="text-sm" style={{ color: '#e76f51', fontWeight: 600, marginTop: 6 }}>
+                                    ⚠️ Нарушение этических рам
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+                
+                {/* Мини-игра */}
+                <h4 style={{ color: '#f4a261', marginTop: 20, marginBottom: 12 }}>Мини-игра: {station.miniGame.title}</h4>
+                <div style={{ padding: 16, background: 'rgba(244,162,97,0.05)', borderRadius: 12, border: '1px solid rgba(244,162,97,0.2)' }}>
+                  <p className="text-sm opacity-70 mb-16">{station.miniGame.description}</p>
+                  
+                  {station.miniGame.type === 'match' && (
+                    <div>
+                      <p className="text-sm" style={{ fontWeight: 600, marginBottom: 8 }}>Правильные пары (барьер → мост):</p>
+                      {station.miniGame.items.map((item: any, idx: number) => (
+                        <div key={idx} style={{ marginBottom: 8, padding: 8, background: 'rgba(46,196,182,0.08)', borderRadius: 6 }}>
+                          <span style={{ color: '#f4a261', fontWeight: 600 }}>{item.barrier}:</span> {item.situation}
+                          <br />
+                          <span style={{ color: '#2ec4b6' }}>→ {item.bridge}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {station.miniGame.type === 'classify' && (
+                    <div>
+                      <p className="text-sm" style={{ fontWeight: 600, marginBottom: 8 }}>Правильные ответы (маркеры → тип → стратегия):</p>
+                      {station.miniGame.items.map((item: any, idx: number) => (
+                        <div key={idx} style={{ marginBottom: 8, padding: 8, background: 'rgba(46,196,182,0.08)', borderRadius: 6 }}>
+                          <span style={{ color: '#f4a261' }}>Маркеры:</span> {item.markers}
+                          <br />
+                          <span style={{ color: '#2ec4b6', fontWeight: 600 }}>Тип:</span> {item.type}
+                          <br />
+                          <span style={{ color: '#3a86ff' }}>Стратегия:</span> {item.strategy}
+                          <br />
+                          <span style={{ color: '#e76f51' }}>Избегать:</span> {item.avoid}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {station.miniGame.type === 'drag-sort' && (
+                    <div>
+                      <p className="text-sm" style={{ fontWeight: 600, marginBottom: 8 }}>Правильный порядок:</p>
+                      {station.miniGame.items.map((item: any, idx: number) => (
+                        <div key={idx} style={{ marginBottom: 6, padding: 8, background: 'rgba(46,196,182,0.08)', borderRadius: 6 }}>
+                          <span style={{ fontWeight: 700, color: '#2ec4b6' }}>{idx + 1}.</span> {item.text}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {station.miniGame.type === 'slider' && (
+                    <div>
+                      <p className="text-sm" style={{ fontWeight: 600, marginBottom: 8 }}>Эталонные параметры по ситуациям:</p>
+                      {station.miniGame.items.map((item: any, idx: number) => (
+                        <div key={idx} style={{ marginBottom: 10, padding: 8, background: 'rgba(46,196,182,0.08)', borderRadius: 6 }}>
+                          {item.part === 'А' && (
+                            <>
+                              <span style={{ color: '#f4a261', fontWeight: 600 }}>Ситуация:</span> {item.situation}
+                              <br />
+                              <span style={{ color: '#2ec4b6' }}>Темп:</span> {item.tempo} | 
+                              <span style={{ color: '#2ec4b6' }}> Тон:</span> {item.tone} | 
+                              <span style={{ color: '#2ec4b6' }}> Пауза:</span> {item.pause} | 
+                              <span style={{ color: '#2ec4b6' }}> Громкость:</span> {item.volume}
+                            </>
+                          )}
+                          {item.part === 'Б' && (
+                            <>
+                              <span style={{ color: '#e76f51', fontWeight: 600 }}>Ловушка:</span> {item.trap}
+                              <br />
+                              <span style={{ color: '#2ec4b6' }}>Переключатель:</span> {item.switch_}
+                            </>
+                          )}
+                          {item.part === 'В' && (
+                            <>
+                              <span style={{ color: '#f4a261', fontWeight: 600 }}>Голос:</span> {item.voice}
+                              <br />
+                              <span style={{ color: '#2ec4b6' }}>Состояние:</span> {item.state}
+                              <br />
+                              <span style={{ color: '#3a86ff' }}>Реакция:</span> {item.reaction}
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {station.miniGame.type === 'multiselect' && (
+                    <div>
+                      <p className="text-sm" style={{ fontWeight: 600, marginBottom: 8 }}>Правильные упреждающие действия:</p>
+                      {station.miniGame.items.map((item: any, idx: number) => (
+                        <div key={idx} style={{ marginBottom: 10, padding: 8, background: 'rgba(46,196,182,0.08)', borderRadius: 6 }}>
+                          <span style={{ color: '#f4a261', fontWeight: 600 }}>Ситуация:</span> {item.situation}
+                          <br />
+                          <span style={{ color: '#2ec4b6', fontWeight: 600 }}>Верные действия:</span>
+                          <ul style={{ margin: '6px 0', paddingLeft: 20 }}>
+                            {item.correct.map((c: string, i: number) => (
+                              <li key={i} style={{ marginBottom: 4 }}>{c}</li>
+                            ))}
+                          </ul>
+                          <span style={{ color: '#e76f51', fontWeight: 600 }}>Ловушки (не выбирать):</span>
+                          <ul style={{ margin: '6px 0', paddingLeft: 20 }}>
+                            {item.traps.map((t: string, i: number) => (
+                              <li key={i} style={{ marginBottom: 4 }}>{t}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            <button className="btn btn-secondary btn-full mt-24" onClick={() => setScreen('teacher')}>← Назад к панели преподавателя</button>
+          </div>
+        );
+
       case 'glossary':
         return (
           <div className="screen active">
@@ -1083,6 +1286,7 @@ export default function App() {
               <button className="btn btn-primary" onClick={exportCSV} style={{ flex: 1 }}>📊 Экспорт CSV</button>
               <button className="btn btn-secondary" onClick={exportTxt} style={{ flex: 1 }}>📄 Экспорт TXT</button>
             </div>
+            <button className="btn btn-gold btn-full mt-16" onClick={() => setScreen('teacher-answers')}>📋 Шкала эталонов (правильные ответы)</button>
             <button className="btn btn-coral btn-full mt-16" onClick={() => { if (confirm('Удалить ВСЕ результаты?')) { clearAllGames(); setSavedGames([]); showNotif('Данные удалены'); } }}>🗑 Очистить все данные</button>
             <button className="btn btn-secondary btn-full" onClick={() => { setTeacherAuth(false); setScreen('welcome'); }}>← Выйти</button>
           </div>
