@@ -369,12 +369,6 @@ export default function App() {
   const goToNextStation = () => {
     if (!gameState) return;
     
-    // Отладочная информация
-    console.log('=== goToNextStation ===');
-    console.log('Current station:', gameState.currentStation);
-    console.log('Case results count:', gameState.caseResults.length);
-    console.log('Mini-game results count:', gameState.miniGameResults.length);
-    
     if (gameState.currentStation < STATIONS.length - 1) {
       const next = gameState.currentStation + 1;
       const newState = { ...gameState, currentStation: next, currentCase: 0, currentTask: 0 };
@@ -394,37 +388,11 @@ export default function App() {
     // Используем функциональное обновление для гарантии актуального состояния
     setGameState(prevState => {
       if (!prevState) {
-        console.error('finishGame: prevState is null');
         return prevState;
-      }
-      
-      // Отладочная информация
-      console.log('=== finishGame Debug ===');
-      console.log('Total caseResults:', prevState.caseResults.length);
-      console.log('Total miniGameResults:', prevState.miniGameResults.length);
-      console.log('Case results by station:', 
-        prevState.caseResults.reduce((acc, r) => {
-          acc[r.stationId] = (acc[r.stationId] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>)
-      );
-      console.log('Mini-game results by station:',
-        prevState.miniGameResults.reduce((acc, r) => {
-          acc[r.stationId] = r.score;
-          return acc;
-        }, {} as Record<string, number>)
-      );
-      console.log('Current scales before recalc:', prevState.scales);
-      
-      // Проверяем, что есть результаты
-      if (prevState.caseResults.length === 0 && prevState.miniGameResults.length === 0) {
-        console.warn('finishGame: нет результатов, используем текущие шкалы');
       }
       
       // Вычисляем финальное состояние на основе актуального prevState
       const finalState = recalcScales(prevState);
-      
-      console.log('Scales after recalc:', finalState.scales);
       
       finalState.badges = checkBadges(finalState);
       finalState.completed = true;
@@ -808,7 +776,7 @@ export default function App() {
         return (
           <div className="screen active">
             <div style={{ textAlign: 'center', paddingTop: 40 }}>
-              <h1 className="title-hero">ГОВОРЯЩИЙ ВРАЧ</h1>
+              <h1 className="title-hero">МЕДИЦИНСКАЯ КОММУНИКАЦИЯ</h1>
               <p className="subtitle-hero">Квест медицинской коммуникации • ДПО</p>
               <div className="glass-card" style={{ textAlign: 'left', marginTop: 24 }}>
                 <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 16, opacity: 0.9 }}>«Медицинская коммуникация — это не мягкий навык. Это основной инструмент врача, от которого зависят приверженность лечению, безопасность пациента и профессиональное долголетие врача.»</p>
@@ -991,11 +959,36 @@ export default function App() {
               </div>
               <SVGRadar scales={gameState.scales} />
               <div style={{ marginTop: 20 }}>
-                {scaleKeys.map(k => (<div key={k} style={{ marginBottom: 8 }}><div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#14343a' }}><span>{SCALE_NAMES[k]}</span><span>{Math.round(gameState.scales[k])} — {getLevel(gameState.scales[k])}</span></div><div style={{ height: 6, background: '#e0dcd5', borderRadius: 3, overflow: 'hidden' }}><div style={{ height: '100%', width: `${gameState.scales[k]}%`, background: gameState.scales[k] >= 85 ? '#2ec4b6' : gameState.scales[k] >= 65 ? '#3a86ff' : gameState.scales[k] >= 40 ? '#f4a261' : '#e76f51', borderRadius: 3 }} /></div></div>))}
+                {scaleKeys.map(k => {
+                  const scaleValue = gameState.scales[k] || 0;
+                  const scaleLevel = getLevel(scaleValue);
+                  const barColor = scaleValue >= 85 ? '#2ec4b6' : scaleValue >= 65 ? '#3a86ff' : scaleValue >= 40 ? '#f4a261' : '#e76f51';
+                  return (
+                    <div key={k} style={{ marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#14343a' }}>
+                        <span>{SCALE_NAMES[k]}</span>
+                        <span>{Math.round(scaleValue)} — {scaleLevel}</span>
+                      </div>
+                      <div style={{ height: 6, background: '#e0dcd5', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${scaleValue}%`, background: barColor, borderRadius: 3, transition: 'width 0.3s ease' }} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
               <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div><h4 style={{ color: '#2ec4b6', fontSize: 14, marginBottom: 8 }}>💪 Сильные стороны</h4>{topStrengths.map(s => (<p key={s.key} className="text-sm" style={{ color: '#14343a' }}>• {SCALE_NAMES[s.key]}</p>))}</div>
-                <div><h4 style={{ color: '#f4a261', fontSize: 14, marginBottom: 8 }}>📈 Зоны роста</h4>{topGrowth.map(s => (<p key={s.key} className="text-sm" style={{ color: '#14343a' }}>• {SCALE_NAMES[s.key]}</p>))}</div>
+                <div>
+                  <h4 style={{ color: '#2ec4b6', fontSize: 14, marginBottom: 8 }}>💪 Сильные стороны</h4>
+                  {topStrengths.length > 0 ? topStrengths.map(s => (
+                    <p key={s.key} className="text-sm" style={{ color: '#14343a' }}>• {SCALE_NAMES[s.key]} ({Math.round(s.val)})</p>
+                  )) : <p className="text-sm opacity-70">Нет данных</p>}
+                </div>
+                <div>
+                  <h4 style={{ color: '#f4a261', fontSize: 14, marginBottom: 8 }}>📈 Зоны роста</h4>
+                  {topGrowth.length > 0 ? topGrowth.map(s => (
+                    <p key={s.key} className="text-sm" style={{ color: '#14343a' }}>• {SCALE_NAMES[s.key]} ({Math.round(s.val)})</p>
+                  )) : <p className="text-sm opacity-70">Нет данных</p>}
+                </div>
               </div>
               {gameState.badges.length > 0 && (<div style={{ marginTop: 20 }}><h4 style={{ color: '#e9c46a', fontSize: 14, marginBottom: 8 }}>🏆 Бейджи</h4><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{gameState.badges.map(b => (<span key={b} style={{ padding: '4px 10px', borderRadius: 12, fontSize: 12, background: 'rgba(233,196,106,0.2)', border: '1px solid #e9c46a', color: '#8a6d20' }}>{BADGES[b]?.name || b}</span>))}</div></div>)}
               <div style={{ marginTop: 20, padding: 16, background: autoPass ? 'rgba(46,196,182,0.1)' : 'rgba(231,111,81,0.1)', borderRadius: 12, border: `1px solid ${autoPass ? '#2ec4b6' : '#e76f51'}` }}>
@@ -1004,7 +997,25 @@ export default function App() {
               </div>
               <div style={{ marginTop: 20 }}>
                 <h4 style={{ color: '#14343a', fontSize: 14, marginBottom: 8 }}>📋 Рекомендации:</h4>
-                {topGrowth.map(s => { const stationIdx = scaleKeys.indexOf(s.key); if (stationIdx >= 0 && stationIdx < STATIONS.length) return <p key={s.key} className="text-sm" style={{ color: '#14343a' }}>• Повторить: {STATIONS[stationIdx].konspekt} «{STATIONS[stationIdx].title}»</p>; return null; })}
+                {topGrowth.length > 0 ? topGrowth.map(s => {
+                  const stationIdx = scaleKeys.indexOf(s.key);
+                  if (stationIdx >= 0 && stationIdx < STATIONS.length) {
+                    return (
+                      <p key={s.key} className="text-sm" style={{ color: '#14343a' }}>
+                        • Повторить: {STATIONS[stationIdx].konspekt} «{STATIONS[stationIdx].title}»
+                      </p>
+                    );
+                  }
+                  // Для Ш6 (интеграция) даём общую рекомендацию
+                  if (s.key === 'sh6') {
+                    return (
+                      <p key={s.key} className="text-sm" style={{ color: '#14343a' }}>
+                        • Отработать интеграцию навыков и саморегуляцию в диалоге
+                      </p>
+                    );
+                  }
+                  return null;
+                }) : <p className="text-sm opacity-70">Все шкалы на хорошем уровне!</p>}
               </div>
             </div>
             <div style={{ marginTop: 24 }}>
