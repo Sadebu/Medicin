@@ -640,8 +640,14 @@ export default function App() {
           <button className="btn btn-primary btn-full mt-16" onClick={() => {
             let correct = 0;
             mg.items.forEach((item: any) => {
-              if (classifySelections[`${item.id}_type`] === item.type) correct += 0.5;
-              if (classifySelections[`${item.id}_strategy`] === item.strategy) correct += 0.5;
+              const typeCorrect = classifySelections[`${item.id}_type`] === item.type;
+              const strategyCorrect = classifySelections[`${item.id}_strategy`] === item.strategy;
+              // Засчитываем только если И тип, И стратегия правильные
+              if (typeCorrect && strategyCorrect) {
+                correct += 1;
+              } else if (typeCorrect || strategyCorrect) {
+                correct += 0.3; // Частичный балл за половину правильного ответа
+              }
             });
             completeMiniGame(correct / mg.items.length);
           }}>Завершить</button>
@@ -678,13 +684,17 @@ export default function App() {
                   <p className="text-sm opacity-70 mb-16">Выберите корректный переключатель:</p>
                   {voiceAnswers[voiceStep] ? (
                     <div>
-                      <p className="text-sm" style={{ color: '#2ec4b6' }}>✓ Верный переключатель из конспекта К4:</p>
+                      {voiceAnswers[voiceStep] === 'correct' ? (
+                        <p className="text-sm" style={{ color: '#2ec4b6', fontWeight: 600 }}>✓ Верно! Правильный переключатель из конспекта К4:</p>
+                      ) : (
+                        <p className="text-sm" style={{ color: '#e76f51', fontWeight: 600 }}>✕ Неверно. Правильный переключатель из конспекта К4:</p>
+                      )}
                       <p className="text-sm mt-16" style={{ fontWeight: 600 }}>{items[voiceStep].switch_}</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <button className="btn btn-secondary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'wrong1' })}>Говорить громче и быстрее, чтобы перебить ловушку</button>
-                      <button className="btn btn-primary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'correct' })}>{items[voiceStep].switch_}</button>
+                      <button className="btn btn-secondary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'correct' })}>{items[voiceStep].switch_}</button>
                       <button className="btn btn-secondary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'wrong2' })}>Продолжать в том же ключе, игнорируя ловушку</button>
                     </div>
                   )}
@@ -695,7 +705,12 @@ export default function App() {
                   <p style={{ fontWeight: 600, marginBottom: 8 }}>Голос собеседника: <span style={{ color: '#f4a261' }}>{items[voiceStep].voice}</span></p>
                   {voiceAnswers[voiceStep] ? (
                     <div>
-                      <p className="text-sm opacity-70 mb-16">Состояние: <span className="chip chip-amber">{items[voiceStep].state}</span></p>
+                      {voiceAnswers[voiceStep] === 'correct' ? (
+                        <p className="text-sm" style={{ color: '#2ec4b6', fontWeight: 600 }}>✓ Верно! Состояние:</p>
+                      ) : (
+                        <p className="text-sm" style={{ color: '#e76f51', fontWeight: 600 }}>✕ Неверно. Правильное состояние:</p>
+                      )}
+                      <p className="text-sm opacity-70 mb-16"><span className="chip chip-amber">{items[voiceStep].state}</span></p>
                       <p className="text-sm opacity-70 mb-16">Уместная реакция:</p>
                       <p className="text-sm" style={{ color: '#2ec4b6', fontWeight: 600 }}>{items[voiceStep].reaction}</p>
                     </div>
@@ -704,7 +719,7 @@ export default function App() {
                       <p className="text-sm opacity-70 mb-16">Выберите состояние собеседника:</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <button className="btn btn-secondary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'wrong' })}>Скука / безразличие</button>
-                        <button className="btn btn-primary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'correct' })}>{items[voiceStep].state}</button>
+                        <button className="btn btn-secondary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'correct' })}>{items[voiceStep].state}</button>
                         <button className="btn btn-secondary btn-full" style={{ textAlign: 'left', padding: '12px 16px' }} onClick={() => setVoiceAnswers({ ...voiceAnswers, [voiceStep]: 'wrong2' })}>Радость / воодушевление</button>
                       </div>
                     </div>
@@ -715,7 +730,21 @@ export default function App() {
           )}
           <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
             {voiceStep > 0 && <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setVoiceStep(voiceStep - 1)}>← Назад</button>}
-            {voiceStep < items.length - 1 ? <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setVoiceStep(voiceStep + 1)}>Далее →</button> : <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => completeMiniGame(0.8)}>Завершить</button>}
+            {voiceStep < items.length - 1 ? <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setVoiceStep(voiceStep + 1)}>Далее →</button> : <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
+              // Подсчитываем реальный результат
+              let correct = 0;
+              let total = 0;
+              items.forEach((item: any, idx: number) => {
+                if (item.part === 'Б' || item.part === 'В') {
+                  total++;
+                  if (voiceAnswers[idx] === 'correct') {
+                    correct++;
+                  }
+                }
+              });
+              const score = total > 0 ? correct / total : 0;
+              completeMiniGame(score);
+            }}>Завершить</button>}
           </div>
           <div className="glass-card mt-16">
             <p className="text-sm" style={{ color: '#e9c46a' }}>📌 Правило трёх сообщений: 1) эмоция, 2) суть, 3) действие.</p>
