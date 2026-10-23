@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Медицинская коммуникация: квест ДПО</title>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100%; min-height: 100vh; }
+      body { background: #0e3a3f; }
+    </style>
+    <script>
+      // Сохраняем исходный HTML для функции скачивания
+      window.__ORIGINAL_HTML__ = null;
+      window.addEventListener('DOMContentLoaded', function() {
+        window.__ORIGINAL_HTML__ = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
