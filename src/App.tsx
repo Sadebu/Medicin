@@ -77,7 +77,7 @@ function createInitialState(profile: PlayerProfile): GameState {
 
 function SVGRadar({ scales }: { scales: Record<string, number> }) {
   const keys = ['sh1', 'sh2', 'sh3', 'sh4', 'sh5', 'sh6'];
-  const labels = ['К1', 'К2', 'К3', 'К4', 'К5', 'Ш6'];
+  const labels = ['К1', 'К2', 'К3', 'К4', 'К5', 'К6'];
   const cx = 150, cy = 130, r = 80;
   const getPoint = (index: number, value: number) => { const angle = (Math.PI * 2 * index) / 6 - Math.PI / 2; const dist = (value / 100) * r; return { x: cx + dist * Math.cos(angle), y: cy + dist * Math.sin(angle) }; };
   const points = keys.map((k, i) => getPoint(i, scales[k] || 0));
@@ -418,7 +418,7 @@ export default function App() {
 
   const exportCSV = () => {
     const games = getAllSavedGames();
-    let csv = 'Имя;Должность;Дата;Индекс;Ш1;Ш2;Ш3;Ш4;Ш5;Ш6;Зачёт\n';
+    let csv = 'Имя;Должность;Дата;Индекс;К1;К2;К3;К4;К5;К6;Зачёт\n';
     games.forEach(g => {
       const idx = calcCommIndex(g.scales);
       const pass = !g.ethicsBreach && idx >= 40 ? 'Зачтено' : 'Доработка';
@@ -465,7 +465,7 @@ export default function App() {
     txt += `Дата: ${new Date().toLocaleDateString('ru-RU')}\nУчастников: ${games.length}\n\n`;
     games.forEach(g => {
       const idx = calcCommIndex(g.scales);
-      txt += `--- ${g.profile?.name || 'Без имени'} ---\nДолжность: ${g.profile?.position || 'не указана'}\nНачало: ${new Date(g.profile?.startTime || '').toLocaleString('ru-RU')}\nЗавершение: ${g.endTime ? new Date(g.endTime).toLocaleString('ru-RU') : 'не завершено'}\nИндекс: ${idx}/100 (${getLevel(idx)})\nШкалы: Ш1=${g.scales.sh1}, Ш2=${g.scales.sh2}, Ш3=${g.scales.sh3}, Ш4=${g.scales.sh4}, Ш5=${g.scales.sh5}, Ш6=${g.scales.sh6}\nЭтика: ${g.ethicsBreach ? 'НАРУШЕНИЯ' : 'без нарушений'}\nБейджи: ${g.badges.map(b => BADGES[b]?.name || b).join(', ')}\n\n`;
+      txt += `--- ${g.profile?.name || 'Без имени'} ---\nДолжность: ${g.profile?.position || 'не указана'}\nНачало: ${new Date(g.profile?.startTime || '').toLocaleString('ru-RU')}\nЗавершение: ${g.endTime ? new Date(g.endTime).toLocaleString('ru-RU') : 'не завершено'}\nИндекс: ${idx}/100 (${getLevel(idx)})\nШкалы: К1=${g.scales.sh1}, К2=${g.scales.sh2}, К3=${g.scales.sh3}, К4=${g.scales.sh4}, К5=${g.scales.sh5}, К6=${g.scales.sh6}\nЭтика: ${g.ethicsBreach ? 'НАРУШЕНИЯ' : 'без нарушений'}\nБейджи: ${g.badges.map(b => BADGES[b]?.name || b).join(', ')}\n\n`;
     });
     if (games.length > 0) {
       txt += '\n===== АГРЕГАТ ПО ПОТОКУ =====\n';
